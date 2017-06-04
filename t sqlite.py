@@ -18,6 +18,7 @@ proxy = ''
 
 ret = 0
 
+print('Start at {}'.format(time.time()))
 
 with sqlite3.connect(db_path) as conn:
     c = conn.cursor()
@@ -44,5 +45,6 @@ with sqlite3.connect(db_path) as conn:
                   [ret, current_name])
         
         conn.commit()
-            
+       
+print('Finish at {}'.format(time.time()))     
             
