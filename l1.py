@@ -3,94 +3,56 @@
 import requests
 from lxml import html
 
-
-def st_scraper(url):
-    try:
-        page = requests.get(url)
-    except requests.exceptions.ConnectionError:
-        return 0
-        
-    tree = html.fromstring(page.content)
-    
-    try:
-        first = tree.xpath('//a[@class="search-title-link"]/@href')[0]
-    except IndexError:
-        return 0
-    
-    try:
-        page = requests.get('https://www.companiesintheuk.co.uk' + first)
-    except requests.exceptions.ConnectionError:
-        return 0
-    
-    tree = html.fromstring(page.content)
-    
-    try:
-        return(tree.xpath('//strong[contains(text(), "Web")]/following-sibling::a/@href')[0])
-    except IndexError:
-        return 0
-
-
-def en_scraper(url):
-    try:
-        page = requests.get(url)
-    except requests.exceptions.ConnectionError:
-        return 0
-        
-    tree = html.fromstring(page.content)
-    
-    try:
-        first = tree.xpath('//div[@class="search_result"]//a/@href')[0]
-    except IndexError:
-        return 0
-    
-    try:
-        page = requests.get('https://www.endole.co.uk' + first)
-    except requests.exceptions.ConnectionError:
-        return 0
-    
-    tree = html.fromstring(page.content)
-    
-    try:
-        return(tree.xpath('//div[contains(text(), "Website")]/../../td[2]/a/@href')[0])
-    except IndexError:
-        return 0
-
-
-def scraper(url, site):
+def scraper(query, site):
     if site == 'en':
-        xpath_query_1 = '//div[@class="search_result"]//a/@href'
+        xpath_query_1 = '//div[@class="search_result"]//a[text()="{}"]/@href'.format(query)
         xpath_query_2 = '//div[contains(text(), "Website")]/../../td[2]/a/@href'
         url_prefix = 'https://www.endole.co.uk'
-        search_prefix = '/search/?match=companies&search='        
+        search_prefix = '/search/?match=companies&search=' 
+        xpath_confirmation = '//td/text()'
+        text_confirmation = 'COMPANY INSIGHTS'
+        xpath_names = '//div[@class="search_result"]//a/text()'
+        xpath_url = '//div[@class="search_result"]//a/@href'
     elif site == 'co':
         xpath_query_1 = '//a[@class="search-title-link"]/@href'
         xpath_query_2 = '//strong[contains(text(), "Web")]/following-sibling::a/@href'
         url_prefix = 'https://www.companiesintheuk.co.uk'
         search_prefix = '/company/find?q='
+        xpath_confirmation = '//div[@class="searchResult"]/div/@class'
+        text_confirmation = 'search_result_title'
+        xpath_names = '//div[@class="search_result_title"]/a/text()'
+        xpath_url = '//div[@class="search_result_title"]/a/@href'
     else:
-        return 'Unknown site id'
+        return -1      # unknown site ID
     
     try:
-        page = requests.get(url_prefix + search_prefix + url)
+        page = requests.get(url_prefix + search_prefix + query)
     except requests.exceptions.ConnectionError:
-        return 'Search results not received'
+        return -2      # search results not received
            
     tree = html.fromstring(page.content)
     
-    try:
-        first = tree.xpath(xpath_query_1)[0]
-    except IndexError:
-        return '1st result not found in search results'
+    if text_confirmation not in tree.xpath(xpath_confirmation):
+        return -2
     
+    search_result_names = tree.xpath(xpath_names)
+    first = ''
+    for i in range(len(search_result_names)):
+        if search_result_names[i].casefold() == query.casefold():
+            first = tree.xpath(xpath_url)[i]
+    
+    if not first:
+        return -3
+       
     try:
         page = requests.get(url_prefix + first)
     except requests.exceptions.ConnectionError:
-        return 'Company page not received'
+        return -4      # Company page not received
     
     tree = html.fromstring(page.content)
     
     try:
         return(tree.xpath(xpath_query_2)[0])
     except IndexError:
-        return 'Website URL not found in company page'
+        return -5       # Website URL not found in company page
     
