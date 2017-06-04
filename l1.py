@@ -3,7 +3,7 @@
 import requests
 from lxml import html
 
-def scraper(query, site):
+def scraper(query, site, proxies={}):
     if site == 'en':
         xpath_query_1 = '//div[@class="search_result"]//a[text()="{}"]/@href'.format(query)
         xpath_query_2 = '//div[contains(text(), "Website")]/../../td[2]/a/@href'
@@ -26,7 +26,8 @@ def scraper(query, site):
         return -1      # unknown site ID
     
     try:
-        page = requests.get(url_prefix + search_prefix + query)
+        page = requests.get(url_prefix + search_prefix + query, 
+                            proxies=proxies)
     except requests.exceptions.ConnectionError:
         return -2      # search results not received
            
@@ -45,7 +46,8 @@ def scraper(query, site):
         return -3
        
     try:
-        page = requests.get(url_prefix + first)
+        page = requests.get(url_prefix + first, 
+                            proxies=proxies)
     except requests.exceptions.ConnectionError:
         return -4      # Company page not received
     
