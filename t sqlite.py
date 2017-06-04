@@ -14,11 +14,20 @@ if len(sys.argv) < 3:
 db_path = sys.argv[2]
 site = sys.argv[1]
 
-proxy = ''
+print('Start at {}'.format(time.asctime()))
+
+if len(sys.argv) > 3:
+    proxy_file = sys.argv[3]
+    with open(proxy_file, 'r') as f:
+        proxy_list = f.read().split()
+    proxy = {'https':random.choice(proxy_list)}
+    print('Using proxy {}'.format(proxy['https']))
+else:
+    proxy = {}
+
+
 
 ret = 0
-
-print('Start at {}'.format(time.asctime()))
 
 with sqlite3.connect(db_path) as conn:
     c = conn.cursor()
@@ -30,7 +39,8 @@ with sqlite3.connect(db_path) as conn:
         if len(all_names) == 0:
             break        
         current_name, status = random.choice(all_names)
-        ret = l1.scraper(site=site, query=current_name)
+        
+        ret = l1.scraper(site=site, query=current_name, proxies=proxy)
         
         if ret in {-1, -2, -4}:
             print(ret)
