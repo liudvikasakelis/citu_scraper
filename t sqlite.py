@@ -18,7 +18,7 @@ proxy = ''
 
 ret = 0
 
-print('Start at {}'.format(time.time()))
+print('Start at {}'.format(time.asctime()))
 
 with sqlite3.connect(db_path) as conn:
     c = conn.cursor()
@@ -46,5 +46,5 @@ with sqlite3.connect(db_path) as conn:
         
         conn.commit()
        
-print('Finish at {}'.format(time.time()))     
+print('Finish at {}'.format(time.asctime()))     
             
