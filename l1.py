@@ -5,7 +5,6 @@ from lxml import html
 
 def scraper(query, site, proxies={}):
     if site == 'en':
-        xpath_query_1 = '//div[@class="search_result"]//a[text()="{}"]/@href'.format(query)
         xpath_query_2 = '//div[contains(text(), "Website")]/../../td[2]/a/@href'
         url_prefix = 'https://www.endole.co.uk'
         search_prefix = '/search/?match=companies&search=' 
@@ -14,7 +13,6 @@ def scraper(query, site, proxies={}):
         xpath_names = '//div[@class="search_result"]//a/text()'
         xpath_url = '//div[@class="search_result"]//a/@href'
     elif site == 'co':
-        xpath_query_1 = '//a[@class="search-title-link"]/@href'
         xpath_query_2 = '//strong[contains(text(), "Web")]/following-sibling::a/@href'
         url_prefix = 'https://www.companiesintheuk.co.uk'
         search_prefix = '/company/find?q='
