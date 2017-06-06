@@ -16,4 +16,6 @@ while true; do
   sleep 5
   ./t\ sqlite.py 'co' data.db proxies.db
 ```
+* Run more than one at the same time; sqlite3 supports write locks, it's a database for crying out loud.
+
 Happy scraping!
