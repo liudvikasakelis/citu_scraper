@@ -6,7 +6,13 @@ import sys
 import sqlite3
 import random
 import time
+import itertools
+import bisect
 
+def weighted_random(elements, weights):
+    cumulative_dist = list(itertools.accumulate(weights))
+    x = random.random() * cumulative_dist[-1]
+    return elements[bisect.bisect(cumulative_dist, x)]
 
 if len(sys.argv) < 3:
     sys.exit(2)
@@ -20,8 +26,14 @@ if len(sys.argv) > 3:
     proxy_file = sys.argv[3]
     with sqlite3.connect(proxy_file) as p:
         c = p.cursor()
+        
         c.execute('SELECT protocol, address FROM proxies')
-        proxy = random.choice(c.fetchall())
+        proxy_list = c.fetchall()
+        
+        c.execute('SELECT status FROM proxies;')
+        weights = [item for sublist in c.fetchall()for item in sublist]
+        
+        proxy = weighted_random(proxy_list, weights)
         proxy = {proxy[0]:proxy[1]}
     print('Using proxy {}'.format(proxy))
 else:
@@ -33,6 +45,7 @@ ret = 0
 
 with sqlite3.connect(db_path) as conn:
     c = conn.cursor()
+    count = 0
     while True:
         time.sleep(random.gammavariate(1,0.1))
         c.execute('SELECT * FROM website WHERE website_url = "0" OR website_url = ?;',
@@ -55,8 +68,19 @@ with sqlite3.connect(db_path) as conn:
                 
         c.execute('UPDATE website SET website_url = ? WHERE company_name = ?',
                   [ret, current_name])
-        
+        count = count + 1
         conn.commit()
-       
+        
+with sqlite3.connect(proxy_file) as p:
+        c = p.cursor()
+        c.execute('SELECT status FROM proxies WHERE address = ?', 
+                  [proxy[list(proxy.keys())[0]]])
+        status = c.fetchone()[0]
+        if count == 0:
+            status = status * 0.9 + 0.3
+        else:
+            status = status + count - 1.5
+        c.execute('UPDATE proxies SET status = ? WHERE address = ?', 
+                  [status, proxy[list(proxy.keys())[0]]])
+        
 print('Finish at {}'.format(time.asctime()))     
-            
