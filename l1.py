@@ -27,8 +27,9 @@ def scraper(query, site, proxies={}):
     
     try:
         page = requests.get(url_prefix + search_prefix + query, 
-                            proxies=proxies)
-    except requests.exceptions.ConnectionError:
+                            proxies=proxies, 
+                            timeout=10)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         return -2      # search results not received
            
     tree = html.fromstring(page.content)
@@ -47,8 +48,9 @@ def scraper(query, site, proxies={}):
        
     try:
         page = requests.get(url_prefix + first, 
-                            proxies=proxies)
-    except requests.exceptions.ConnectionError:
+                            proxies=proxies, 
+                            timeout=10)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         return -4      # Company page not received
     
     tree = html.fromstring(page.content)
