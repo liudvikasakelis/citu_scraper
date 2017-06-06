@@ -18,10 +18,12 @@ print('Start at {}'.format(time.asctime()))
 
 if len(sys.argv) > 3:
     proxy_file = sys.argv[3]
-    with open(proxy_file, 'r') as f:
-        proxy_list = f.read().split()
-    proxy = {'https':random.choice(proxy_list)}
-    print('Using proxy {}'.format(proxy['https']))
+    with sqlite3.connect(proxy_file) as p:
+        c = p.cursor()
+        c.execute('SELECT protocol, address FROM proxies')
+        proxy = random.choice(c.fetchall())
+        proxy = {proxy[0]:proxy[1]}
+    print('Using proxy {}'.format(proxy))
 else:
     proxy = {}
 
