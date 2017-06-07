@@ -53,6 +53,7 @@ with sqlite3.connect(db_path) as conn:
         all_names = c.fetchall()
         if len(all_names) == 0:
             break        
+        
         current_name, status = random.choice(all_names)
         
         ret = l1.scraper(site=site, query=current_name, proxies=proxy)
@@ -71,7 +72,8 @@ with sqlite3.connect(db_path) as conn:
         count = count + 1
         conn.commit()
         
-with sqlite3.connect(proxy_file) as p:
+if proxy:
+    with sqlite3.connect(proxy_file) as p:
         c = p.cursor()
         c.execute('SELECT status FROM proxies WHERE address = ?', 
                   [proxy[list(proxy.keys())[0]]])
