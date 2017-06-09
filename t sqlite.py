@@ -27,14 +27,16 @@ if len(sys.argv) > 3:
     with sqlite3.connect(proxy_file) as p:
         c = p.cursor()
         
-        c.execute('SELECT protocol, address FROM proxies')
+        c.execute('SELECT http, https FROM proxies')
         proxy_list = c.fetchall()
         
         c.execute('SELECT status FROM proxies;')
         weights = [item for sublist in c.fetchall()for item in sublist]
         
         proxy = weighted_random(proxy_list, weights)
-        proxy = {proxy[0]:proxy[1]}
+        proxy = {'http':'http://'+proxy[0],
+                 'https':'https://'+proxy[1]}
+        
     print('Using proxy {}'.format(proxy))
 else:
     proxy = {}
@@ -47,7 +49,7 @@ with sqlite3.connect(db_path) as conn:
     c = conn.cursor()
     count = 0
     while True:
-        time.sleep(random.gammavariate(1,0.1))
+        time.sleep(random.gammavariate(1, 0.1))
         c.execute('SELECT * FROM website WHERE website_url = "0" OR website_url = ?;',
                   tuple({'co', 'en'} - {site}))
         all_names = c.fetchall()
@@ -70,19 +72,20 @@ with sqlite3.connect(db_path) as conn:
         c.execute('UPDATE website SET website_url = ? WHERE company_name = ?',
                   [ret, current_name])
         count = count + 1
+        
         conn.commit()
         
 if proxy:
     with sqlite3.connect(proxy_file) as p:
         c = p.cursor()
-        c.execute('SELECT status FROM proxies WHERE address = ?', 
-                  [proxy[list(proxy.keys())[0]]])
+        c.execute('SELECT status FROM proxies WHERE http = ?', 
+                  [proxy['http'][7:]])
         status = c.fetchone()[0]
         if count == 0:
             status = status * 0.9 + 0.3
         else:
             status = status + count - 1.5
-        c.execute('UPDATE proxies SET status = ? WHERE address = ?', 
-                  [status, proxy[list(proxy.keys())[0]]])
+        c.execute('UPDATE proxies SET status = ? WHERE http = ?', 
+                  [status, proxy['http'][7:]])
         
 print('Finish at {}'.format(time.asctime()))     
